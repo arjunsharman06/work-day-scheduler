@@ -5,6 +5,8 @@ var timeArray = [];
 var onLoad = function () {
     var dateTime = getDate();
 
+    timeArray = localStorage.getItem("Time");
+
     // Expected output "Sunday, 20 December 2020 at 14:23:16 GMT+11"
     $('#currentDay').text(new Intl.DateTimeFormat('en-GB', { dateStyle: 'full' }).format(dateTime));
 
@@ -18,7 +20,7 @@ var onLoad = function () {
         zIndex: 9999,
         opacity: 0.5,
         items: ".row:not(.past-time)",
-        activate: function (event, ui) {           
+        activate: function (event, ui) {
             ui.item.addClass('bg-primary border border-info border-5');
         },
         deactivate: function (event, ui) {
@@ -26,7 +28,8 @@ var onLoad = function () {
         },
         stop: function (event, ui) {
             var position = 0;
-            var rowsArray =[];
+            var rowsArray = [];
+            timeArray = localStorage.getItem("Time").split(',');
 
             // Looping through each element and changing the attritube of the changed element
             $('.container').find('.row').each(function () {
@@ -66,10 +69,10 @@ var onLoad = function () {
                     $(this).attr("data-position", currentPostion);
 
                     // Saving in Local Storage
-                    setValueInLocalStorage(timeOrdinal,$(this)
-                    .parent()
-                    .find('textarea')
-                    .val());
+                    setValueInLocalStorage(timeOrdinal, $(this)
+                        .parent()
+                        .find('textarea')
+                        .val());
                 }
                 position++;
             });
@@ -78,21 +81,23 @@ var onLoad = function () {
     $(".container").disableSelection();
 
     // Checking on page-reload if the localstorage has value;
-    var localStorageKeys = Object.keys(localStorage);
-    var startTime = getTimeIn24HrsFromat(localStorageKeys[0]);
-    var endTime = getTimeIn24HrsFromat(localStorageKeys[localStorageKeys.length-1]);
+    if (timeArray != null && timeArray.length > 0) {
+        var arrTime = timeArray.split(',');
 
-    if(localStorageKeys.length > 0 ){
-      createShedule(startTime,endTime);
-      $("#schedule-form-modal").modal('hide');
-      $('#clear-btn').show();
-      $('#welcome-btn').hide();
+        var startTime = getTimeIn24HrsFromat(arrTime[0]);
+        var endTime = getTimeIn24HrsFromat(arrTime[arrTime.length - 1]);
+        timeArray =[];
+        createShedule(startTime, endTime);
+        $("#schedule-form-modal").modal('hide');
+        $('#clear-btn').show();
+        $('#welcome-btn').hide();
     }
+    timeArray =[];
 };
 
 // Open Model
-$("#schedule-form-modal").on("show.bs.modal", function () {      
-    $('#welcome-btn').hide();    
+$("#schedule-form-modal").on("show.bs.modal", function () {
+    $('#welcome-btn').hide();
 });
 
 // modal is fully visible
@@ -102,8 +107,7 @@ $("#schedule-form-modal").on("shown.bs.modal", function () {
 });
 
 // Close button in modal 
-$("#schedule-form-modal .close ").on("click",()=>
-{ 
+$("#schedule-form-modal .close ").on("click", () => {
     $("#schedule-form-modal").modal("hide");
     $('#welcome-btn').show();
     alert("Thank You for using the schedular")
@@ -114,12 +118,12 @@ $("#schedule-form-modal .btn-save").click(function () {
     // get form values
     var startTime = $("#startTime").val();
     var endTime = $("#endTime").val();
-    
-    if ((startTime && endTime) && (parseInt(startTime) < parseInt (endTime))) {
-    // close modal
-    $("#schedule-form-modal").modal("hide");    
-    createShedule(startTime, endTime);
-    }else{
+
+    if ((startTime && endTime) && (parseInt(startTime) < parseInt(endTime))) {
+        // close modal
+        $("#schedule-form-modal").modal("hide");
+        createShedule(startTime, endTime);
+    } else {
         alert("Start time should be less than end time");
         return false;
     }
@@ -135,7 +139,8 @@ var getDate = function () {
 };
 
 //Dynamically creating the number of schedule 
-var createShedule = function (startTime,endTime) {
+var createShedule = function (startTime, endTime) {
+
     var currentTime = getDate();
     var startTime = new Date(currentTime.setHours(parseInt(startTime)));
     var endTime = new Date(currentTime.setHours(parseInt(endTime)));
@@ -146,6 +151,7 @@ var createShedule = function (startTime,endTime) {
         startTime.setHours(startTime.getHours() + 1)) {
         createTimeContainer(startTime, position++);
     }
+    localStorage.setItem("Time",timeArray)
 }
 
 // Creating the HTML for time , schedule , savebtn
@@ -179,9 +185,10 @@ var createTimeContainer = function (time, position) {
 }
 
 var auditTask = function (row, time) {
-
+    
     // get time from the task element
     var timeOrdinal = time.toLocaleString('en-US', { hour: 'numeric', hour12: true });
+    var textareaValue = $(row).find('textarea').val();
     var scheduleTime = new Date(time.setMinutes(0, 0, 0)).getTime();
     var currentTime = new Date(new Date().setMinutes(0, 0, 0)).getTime();
 
@@ -202,6 +209,7 @@ var auditTask = function (row, time) {
         $(row).data('data-time', timeOrdinal).find('textarea').addClass('past');
         $(row).addClass('past-time');
     }
+    setValueInLocalStorage(timeOrdinal, textareaValue);
 }
 
 // Get time
@@ -229,7 +237,7 @@ $(".container").on("click", ".saveBtn", function (e) {
 
 // Click on Clear Button 
 $("#clear-btn").on("click", "button", function (e) {
-
+    timeArray = [];
     localStorage.clear();
     $('#clear-btn').hide();
     $(".container").empty();
@@ -238,11 +246,8 @@ $("#clear-btn").on("click", "button", function (e) {
 
 // Set Value in LocalStorage
 var setValueInLocalStorage = function (key, text) {
-    if (text !== null) {
+    if (key != "" || text !== null) {
         localStorage.setItem(key, text);
-    } else {
-        alert("Nothing to save in DB");
-        return false;
     }
 };
 
@@ -252,8 +257,7 @@ var getValueFromLocalStorage = function (key) {
 };
 
 // Get Time in 24hrs format
-var getTimeIn24HrsFromat = function(hours){
-
+var getTimeIn24HrsFromat = function (hours) {
     var time = parseInt(hours
         .split(' ')[0]
     );
@@ -262,7 +266,9 @@ var getTimeIn24HrsFromat = function(hours){
         .toLowerCase();
 
     // Check for AM/PM of the timings
-    if (timeOrdinal.toLowerCase() === "pm") {
+    if (timeOrdinal.toLowerCase() === "pm" && time === 12){
+        time = 12;
+    }else if (timeOrdinal.toLowerCase() === "pm") {
         time = time + 12;
     } else if (time === 12 && timeOrdinal.toLowerCase() === 'am') {
         time = 24;
@@ -273,5 +279,15 @@ var getTimeIn24HrsFromat = function(hours){
 // Hiding the clear button on load
 $('#clear-btn').hide();
 
+// Setting it to auto-saved
+setInterval(function () {
+    $(".container").children('.row').each(function(index, el) {
+        var currentTime = getDate();
+        var time = getTimeIn24HrsFromat($(el).attr('data-time')) ;
+        var startTime = new Date(currentTime.setHours(parseInt(time)));
+        auditTask($(el),startTime);
+    });
+  }, ((1000 * 60) * 30));
+
 // To Load the init function
- onLoad();
+onLoad();
