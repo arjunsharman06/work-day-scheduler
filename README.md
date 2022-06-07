@@ -33,8 +33,8 @@ https://arjunsharman06.github.io/work-day-scheduler/
 
 ### Other Links
 
-* #### Clone: git@github.com:arjunsharman06/quiz-wizard.git
-* #### Code: https://github.com/arjunsharman06/quiz-wizard
+* #### Clone: git@github.com:arjunsharman06/work-day-scheduler.git
+* #### Code: https://github.com/arjunsharman06/work-day-scheduler
 
 
 # Screenshots
